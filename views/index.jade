@@ -1,0 +1,52 @@
+//*****************************************************
+    Created by KashiN (Allena Johann), Dravet jean-Baptiste,
+    for TowerDefenseOnline,
+    on 06/03/2016.
+    *******************************************************
+
+extends layout.jade
+
+block append head
+    link(href='https://fonts.googleapis.com/css?family=Open+Sans:400,600,800,700' rel='stylesheet' type='text/css')
+    link(rel='stylesheet', href='/stylesheets/bootstrap/bootstrap.min.css')
+    link(rel='stylesheet', href='/stylesheets/font/font.css')
+    // Add the css for this page
+    link(rel='stylesheet', href='/stylesheets/chosegame/choseGame.css')
+    // Add css for userPanel.jade
+    link(rel='stylesheet', href='/stylesheets/ui/userPanelStyle.css')
+
+
+block content
+    include ./ui/userPanel.jade
+    .title
+        h1 Tower Defense Online
+        h2 Chose your game
+    .game
+        .row
+            .col-md-4
+                figure.game-block#game-block-1
+                    img.background(src='/images/icons/iconGame_2.jpg', alt='Game-1')
+                    img.game-icon#game-1(src='/images/icons/iconGame_2.jpg', alt='Game-1')
+            .col-md-4
+                figure.game-block#game-block-2
+                    img.background(src='/images/icons/iconGame_4.jpg', alt='Game-2')
+                    img.game-icon#game-2(src='/images/icons/iconGame_4.jpg', alt='Game-2')
+            .col-md-4
+                figure.game-block
+                    img.background(src='/images/icons/iconGame_plus.png', alt='Game-3')
+                    img.game-icon#game-3(src='/images/icons/iconGame_plus.png', alt='Game-3')
+                    figcaption
+                        h3
+                            | New Game
+        .row.control-game
+            .col-md-2
+            .col-md-4
+                span#previous-game Previous Games
+            .col-md-4
+                span#next-game next Games
+            .col-md-2
+
+block append script
+    script(type="text/javascript" src="/javascripts/howler/howler.js")
+    script(type="text/javascript" src="/socket.io/socket.io.js")
+    script(type="text/javascript" src="/javascripts/index.js")

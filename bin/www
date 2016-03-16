@@ -1,0 +1,1194 @@
+/**
+ * Created by KashiN (Allena Johann), Dravet jean-Baptiste,
+ * for TowerDefenseOnline,
+ * on 09/03/2016.
+ */
+
+/*********************************************************************
+ * Fields *
+ *********************************************************************/
+
+/**
+ * Module dependencies.
+ */
+var app = require('../app');
+var debug = require('debug')('TowerDefenseOnline:server');
+var http = require('http');
+
+/**
+ * Variables
+ */
+var idIndexGame = 0;
+var idIndexTower = 0;
+var idMonster = 0;
+var idMissile = 0;
+var gameTable = [];
+var canvasWidth = 960;
+var canvasHeight = 540;
+var canvasNbColumn = 30;
+var canvasNbRow = 20;
+var gameRoom = [];
+var widthBox = canvasWidth / canvasNbColumn;
+var heightBox = canvasHeight / canvasNbRow;
+
+var damageTable = 7;
+var goldByKill = 10;
+var earlyGold = 1200;
+
+var updateGameInterval;
+var hitGameInterval;
+
+/*********************************************************************
+ * Enum *
+ *********************************************************************/
+
+/**
+ * Enum Type.
+ */
+var TYPE = {
+    NORMAL: {value: 0, name: "Normal", cost: 100, enemy: "All"},
+    FIRE: {value: 1, name: "Fire", cost: 100, enemy: "Ice"},
+    POISON: {value: 2, name: "Poison", cost: 100, enemy: "Fire"},
+    ICE: {value: 3, name: "Ice", cost: 100, enemy: "Poison"}
+};
+
+/**
+ * Enum GroundType
+ */
+var GROUNDTYPE = {
+    ROAD: {value: 0, name: "Road"},
+    HOOD: {value: 1, name: "Hood"},
+    TEMPLE: {value: 2, name: "Temple"},
+    SPAWN: {value: 3, name: "Spawn"},
+    TOWERZONE: {value: 4, name: "TowerZone"}
+};
+
+/**
+ * Enum direction
+ */
+var DIRECTION = {
+    DOWN: {value: 0, name: "Down"},
+    LEFT: {value: 1, name: "Left"},
+    RIGHT: {value: 2, name: "Right"}
+};
+
+/*********************************************************************
+ * Class *
+ *********************************************************************/
+
+/**
+ * Class Malus.
+ */
+function Malus(type) {
+    this.time = 5;
+    this.type = type;
+}
+
+/**
+ * Class Box.
+ */
+function Box(x, y, groundType) {
+    this.widthBox = widthBox;
+    this.heightBox = heightBox;
+    this.nbBox = y * canvasNbColumn + x;
+    this.x = x;
+    this.y = y;
+    this.positionX = x * this.widthBox;
+    this.positionY = y * this.heightBox;
+    this.type = groundType;
+}
+
+/**
+ * Class Map.
+ */
+function Map() {
+    this.boxes = [];
+
+    this.initCases = function () {
+        var x, y;
+        for (y = 0; y < 3; y++) {
+            for (x = 0; x < 30; x++) {
+                if ((x % 7 == 0) || (x % 7 == 1)) {
+                    this.boxes.push(new Box(x, y, GROUNDTYPE.HOOD));
+                } else {
+                    this.boxes.push(new Box(x, y, GROUNDTYPE.SPAWN));
+                }
+            }
+        }
+        for (x = 0; x < 30; x++) {
+            if ((x % 7 == 3) || (x % 7 == 4) || (x % 7 == 5)) {
+                this.boxes.push(new Box(x, 3, GROUNDTYPE.ROAD));
+            } else {
+                this.boxes.push(new Box(x, 3, GROUNDTYPE.HOOD));
+            }
+        }
+        for (y = 4; y < 7; y++) {
+            for (x = 0; x < 30; x++) {
+                if ((x < 3) || (x > 26)) {
+                    this.boxes.push(new Box(x, y, GROUNDTYPE.HOOD));
+                } else if ((x % 7 == 3) || (x % 7 == 4) || (x % 7 == 5)) {
+                    this.boxes.push(new Box(x, y, GROUNDTYPE.ROAD));
+                } else {
+                    this.boxes.push(new Box(x, y, GROUNDTYPE.TOWERZONE));
+                }
+            }
+        }
+        for (y = 7; y < 9; y++) {
+            for (x = 0; x < 30; x++) {
+                if ((x < 3) || (x > 26)) {
+                    this.boxes.push(new Box(x, y, GROUNDTYPE.HOOD));
+                } else if ((x % 7 == 0) || (x % 7 == 1)) {
+                    this.boxes.push(new Box(x, y, GROUNDTYPE.TOWERZONE));
+                } else {
+                    this.boxes.push(new Box(x, y, GROUNDTYPE.ROAD));
+                }
+            }
+        }
+        for (x = 0; x < 30; x++) {
+            if ((x < 3) || (x > 26)) {
+                this.boxes.push(new Box(x, 9, GROUNDTYPE.HOOD));
+            } else {
+                this.boxes.push(new Box(x, 9, GROUNDTYPE.ROAD));
+            }
+        }
+        for (x = 0; x < 30; x++) {
+            if ((x < 3) || (x > 26)) {
+                this.boxes.push(new Box(x, 10, GROUNDTYPE.HOOD));
+            } else if ((x % 7 == 3) || (x % 7 == 4) || (x % 7 == 5)) {
+                this.boxes.push(new Box(x, 10, GROUNDTYPE.TOWERZONE));
+            } else {
+                this.boxes.push(new Box(x, 10, GROUNDTYPE.ROAD));
+            }
+        }
+        for (y = 11; y < 13; y++) {
+            for (x = 0; x < 30; x++) {
+                if ((x < 5) || (x > 24)) {
+                    this.boxes.push(new Box(x, y, GROUNDTYPE.HOOD));
+                } else if ((x % 7 == 0) || (x % 7 == 1)) {
+                    this.boxes.push(new Box(x, y, GROUNDTYPE.ROAD));
+                } else {
+                    this.boxes.push(new Box(x, y, GROUNDTYPE.TOWERZONE));
+                }
+            }
+        }
+        for (y = 13; y < 15; y++) {
+            for (x = 0; x < 30; x++) {
+                if ((x < 5) || (x > 24)) {
+                    this.boxes.push(new Box(x, y, GROUNDTYPE.HOOD));
+                } else if ((x < 7) || (x > 22)) {
+                    this.boxes.push(new Box(x, y, GROUNDTYPE.TOWERZONE));
+                } else {
+                    this.boxes.push(new Box(x, y, GROUNDTYPE.ROAD));
+                }
+            }
+        }
+        for (y = 15; y < 17; y++) {
+            for (x = 0; x < 30; x++) {
+                if ((x < 5) || (x > 24)) {
+                    this.boxes.push(new Box(x, y, GROUNDTYPE.HOOD));
+                } else if ((x < 14) || (x > 15)) {
+                    this.boxes.push(new Box(x, y, GROUNDTYPE.TOWERZONE));
+                } else {
+                    this.boxes.push(new Box(x, y, GROUNDTYPE.ROAD));
+                }
+            }
+        }
+        for (y = 17; y < 20; y++) {
+            for (x = 0; x < 30; x++) {
+                if ((x < 12) || (x > 17)) {
+                    this.boxes.push(new Box(x, y, GROUNDTYPE.HOOD));
+                } else {
+                    this.boxes.push(new Box(x, y, GROUNDTYPE.TEMPLE));
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Class monster.
+ */
+function Monster(box, round) {
+    this.id = idMonster++;
+    this.box = box;
+    this.life = 10 + round * 2;
+    this.futureLife = this.life;
+    this.positionX = box.positionX + (box.widthBox / 2);
+    this.positionY = box.positionY + (box.heightBox / 2);
+    this.speed = 1;
+    this.direction = DIRECTION.DOWN;
+    this.size = 6;
+    this.lvl = 1 + round;
+    this.type = TYPE.NORMAL;
+
+    if (round > 10){
+        var tempRand = randomBetween(0, 10);
+        switch (true) {
+            case (tempRand < 3):
+                this.type = TYPE.POISON;
+                break;
+            case (tempRand >= 3 && tempRand < 6):
+                this.type = TYPE.ICE;
+                break;
+            case (tempRand >= 6 && tempRand < 9):
+                this.type = TYPE.FIRE;
+                break;
+            default:
+                this.type = TYPE.NORMAL;
+                break;
+        }
+    }
+
+    this.isDead = function () {
+        return this.life <= 0;
+    };
+
+    this.hit = function (type) {
+        if (this.type.enemy === type.name || (this.type.enemy === TYPE.NORMAL.enemy && type.name != TYPE.NORMAL.name)) {
+            this.life -= damageTable * 2;
+        } else {
+            if (this.type.name != TYPE.NORMAL.name && type.name === TYPE.NORMAL.name) {
+                this.life -= damageTable / 2;
+            } else {
+                this.life -= damageTable;
+            }
+        }
+    };
+
+    this.updateFutureLife = function (type) {
+        if (this.type.enemy === type.name || (this.type.enemy === TYPE.NORMAL.enemy && type.name != TYPE.NORMAL.name)) {
+            this.life -= damageTable * 2;
+        } else {
+            if (this.type.name != TYPE.NORMAL.name && type.name === TYPE.NORMAL.name) {
+                this.life -= damageTable / 2;
+            } else {
+                this.life -= damageTable;
+            }
+        }
+    };
+
+    this.newDirection = function (game) {
+        if (this.box.x < (canvasNbColumn / 2)) {
+            this.direction = DIRECTION.RIGHT;
+        } else {
+            this.direction = DIRECTION.LEFT;
+        }
+    };
+
+    this.canGoDown = function (game, newBox) {
+        var downBoxTypeName = game.map.boxes[newBox.nbBox + canvasNbColumn].type.name;
+        return !!(downBoxTypeName === GROUNDTYPE.ROAD.name || downBoxTypeName === GROUNDTYPE.TEMPLE.name || downBoxTypeName === GROUNDTYPE.SPAWN.name);
+    };
+
+    this.move = function (game) {
+        switch (this.direction.name) {
+            case DIRECTION.DOWN.name :
+                var positionYTemp = this.positionY + this.speed;
+                if ((positionYTemp + this.size / 2) < this.box.positionY + this.box.heightBox) {
+                    this.positionY = positionYTemp;
+                    var boxTemp = searchBoxByPosition(game, this.positionX - (this.positionX % this.box.widthBox), (positionYTemp + this.box.heightBox / 2) - ((positionYTemp + this.box.heightBox / 2) % this.box.heightBox));
+                    switch (boxTemp.type.name) {
+                        case GROUNDTYPE.ROAD.name:
+                            this.positionY = positionYTemp;
+                            break;
+                        case GROUNDTYPE.TEMPLE.name:
+                            game.loseLife(this);
+                            break;
+                        case GROUNDTYPE.SPAWN.name:
+                            this.positionY = positionYTemp;
+                            break;
+                        default:
+                            this.newDirection(game);
+                            this.move(game);
+                            break;
+                    }
+                } else {
+                    var boxTemp = searchBoxByPosition(game, this.positionX - (this.positionX % this.box.widthBox), positionYTemp - (positionYTemp % this.box.heightBox));
+                    switch (boxTemp.type.name) {
+                        case GROUNDTYPE.ROAD.name:
+                            this.positionY = positionYTemp;
+                            this.box = boxTemp;
+                            break;
+                        case GROUNDTYPE.TEMPLE.name:
+                            game.loseLife(this);
+                            break;
+                        case GROUNDTYPE.SPAWN.name:
+                            this.positionY = positionYTemp;
+                            this.box = boxTemp;
+                            break;
+                        default:
+                            this.newDirection(game);
+                            this.move(game);
+                            break;
+                    }
+                }
+                break;
+            case DIRECTION.RIGHT.name :
+                var positionXTemp = this.positionX + this.speed;
+                if ((positionXTemp) < this.box.positionX) {
+                    this.positionX = positionXTemp;
+                } else {
+                    var boxTemp = searchBoxByPosition(game, positionXTemp - (positionXTemp % this.box.widthBox), this.positionY - (this.positionY % this.box.heightBox));
+                    if (this.canGoDown(game, boxTemp)) {
+                        if (positionXTemp > boxTemp.positionX + boxTemp.widthBox / 2) {
+                            this.direction = DIRECTION.DOWN;
+                        }
+                        this.positionX = positionXTemp;
+                        this.box = boxTemp;
+                    } else {
+                        this.box = boxTemp;
+                        this.positionX = positionXTemp;
+                    }
+                }
+                break;
+            case DIRECTION.LEFT.name :
+                var positionXTemp = this.positionX - this.speed;
+                if ((positionXTemp) > (this.box.positionX + this.box.widthBox / 2)) {
+                    this.positionX = positionXTemp;
+                } else {
+                    var boxTemp = searchBoxByPosition(game, positionXTemp - (positionXTemp % this.box.widthBox), this.positionY - (this.positionY % this.box.heightBox));
+                    if (this.canGoDown(game, this.box)) {
+                        if (positionXTemp < (this.box.positionX + this.box.widthBox / 2)) {
+                            this.direction = DIRECTION.DOWN;
+                        }
+                        this.box = boxTemp;
+                        this.positionX = positionXTemp;
+                    } else {
+                        this.box = boxTemp;
+                        this.positionX = positionXTemp;
+                    }
+                }
+                break;
+        }
+    };
+}
+
+/**
+ * Class Player
+ */
+function Player(pseudo) {
+    this.pseudo = pseudo;
+    this.gold = earlyGold;
+    this.nbKill = 0;
+    this.nbtower = 0;
+
+    this.giveGold = function (newGold) {
+        this.gold += newGold;
+    };
+
+    this.removeGold = function (amount) {
+        this.gold -= amount;
+    };
+
+    this.addTower = function (tower) {
+        this.removeGold(tower.cost);
+        this.nbtower++;
+    };
+
+    this.removeTower = function (cost) {
+        this.giveGold(cost);
+        this.nbtower--;
+    };
+}
+
+/**
+ * Class Tower
+ */
+function Tower(player, box) {
+    this.box = box;
+    this.id = idIndexTower++;
+    this.ranges = 3;
+    this.player = player;
+    this.reload = 1;
+    this.lvl = 1;
+    this.cost = TYPE.NORMAL.cost;
+    this.type = TYPE.NORMAL;
+
+    this.player.addTower(this);
+
+    this.upgradeFire = function () {
+        this.type = TYPE.FIRE;
+        this.cost += TYPE.FIRE.cost;
+        this.ranges++;
+        this.player.removeGold(TYPE.FIRE.cost);
+    };
+    this.upgradeIce = function () {
+        this.type = TYPE.ICE;
+        this.cost += TYPE.ICE.cost;
+        this.ranges++;
+        this.player.removeGold(TYPE.ICE.cost);
+    };
+    this.upgradePoison = function () {
+        this.type = TYPE.POISON;
+        this.cost += TYPE.POISON.cost;
+        this.ranges++;
+        this.player.removeGold(TYPE.POISON.cost);
+    };
+
+    this.recycle = function () {
+        this.player.removeTower(this.cost / 2);
+    }
+}
+
+/**
+ * Class missile
+ */
+function Missile(monster, player, tower) {
+    this.id = idMissile++;
+    this.monster = monster;
+    this.player = player;
+    this.positionX = tower.box.positionX;
+    this.positionY = tower.box.positionY;
+    this.speed = 4;
+    this.size = 2;
+    this.type = tower.type;
+
+    this.move = function (game) {
+        if (this.positionX <= (this.monster.positionX + this.size / 2 + this.speed) && this.positionX >= (this.monster.positionX - this.size / 2 - this.speed)) {
+            if (this.positionY <= (this.monster.positionY + this.size / 2 + this.speed) && this.positionY >= (this.monster.positionY - this.size / 2 - this.speed)) {
+                game.hitMonster(this.monster, this.player, this.type, this);
+            } else {
+                if (this.positionY < this.monster.positionY) {
+                    this.positionY += this.speed;
+                } else {
+                    this.positionY -= this.speed;
+                }
+            }
+        } else {
+            if (this.positionY <= (this.monster.positionY + this.size / 2 + this.speed) && this.positionY >= (this.monster.positionY - this.size / 2 - this.speed)) {
+                if (this.positionX < this.monster.positionX) {
+                    this.positionX += this.speed;
+                } else {
+                    this.positionX -= this.speed;
+                }
+            } else {
+                if (this.positionX < this.monster.positionX) {
+                    if (this.positionY < this.monster.positionY) {
+                        this.positionX += this.speed / 2;
+                        this.positionY += this.speed / 2;
+                    } else {
+                        this.positionX += this.speed / 2;
+                        this.positionY -= this.speed / 2;
+                    }
+                } else {
+                    if (this.positionY < this.monster.positionY) {
+                        this.positionX -= this.speed / 2;
+                        this.positionY += this.speed / 2;
+                    } else {
+                        this.positionX -= this.speed / 2;
+                        this.positionY -= this.speed / 2;
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Class Game
+ */
+function Game(name) {
+    this.id = idIndexGame++;
+    this.name = name + "Game";
+    this.round = 0;
+    this.nbPlayer = 1;
+    this.playerTable = [];
+    this.monsterTable = [];
+    this.missilleTable = [];
+    this.nbMonster = 0;
+    this.map = new Map();
+    this.towerTable = [];
+    this.life = 20;
+    this.nbTower = 0;
+
+    gameRoom.push(this.name);
+
+    this.playerTable.push(new Player(name));
+
+    this.map.initCases();
+
+    this.hitMonster = function (monster, player, type, missile) {
+        for (var i = 0; i < this.missilleTable.length; i++) {
+            if (this.missilleTable[i].id === missile.id) {
+                this.missilleTable.splice(i, 1);
+            }
+        }
+        for (var i = 0; i < this.monsterTable.length; i++) {
+            if (this.monsterTable[i].id === monster.id) {
+                this.monsterTable[i].hit(type);
+                if (this.monsterTable[i].isDead()) {
+                    this.monsterTable.splice(i, 1);
+                    player.giveGold(Math.floor(goldByKill / this.nbPlayer));
+                    player.nbKill++;
+                }
+                break;
+            }
+        }
+    };
+
+    this.update = function () {
+        if (this.monsterTable.length === 0) {
+            this.nextRound();
+        }
+        this.moveMissile();
+        this.moveMonster();
+    };
+
+    this.nextRound = function () {
+        this.round++;
+        this.popMonster();
+    };
+
+    this.addPlayer = function (newPlayerPseudo) {
+        this.playerTable.push(new Player(newPlayerPseudo));
+        this.nbPlayer++;
+        this.reloadGold();
+    };
+
+    this.reloadGold = function () {
+        for (var i = 0; i < this.playerTable.length; i++) {
+            this.playerTable[i].gold = Math.floor(earlyGold / this.playerTable.length);
+        }
+    };
+
+    this.removePlayer = function (removePlayerPseudo) {
+        for (var i = 0; i < this.playerTable.length; i++) {
+            if (this.playerTable[i].pseudo === removePlayerPseudo) {
+                this.playerTable.splice(i, 1);
+                this.nbPlayer--;
+                if (this.nbPlayer <= 0) {
+                    clearInterval(updateGameInterval);
+                    clearInterval(hitGameInterval);
+                    for (var j = 0; j < gameTable.length; j++) {
+                        if (gameTable[i].id === this.id) {
+                            gameTable.splice(j, 1);
+                            break;
+                        }
+                    }
+                } else {
+                    if (this.round <= 0) {
+                        this.reloadGold();
+                    }
+                }
+            }
+        }
+    };
+
+    this.loseLife = function (monster) {
+        this.life -= 1;
+        io.sockets.in(this.name).emit('loseLife');
+        for (var i = 0; i < this.monsterTable.length; i++) {
+            if (this.monsterTable[i].id === monster.id) {
+                this.monsterTable.splice(i, 1);
+                break;
+            }
+        }
+        this.nbMonster--;
+        if (this.life <= 0) {
+            clearInterval(updateGameInterval);
+            clearInterval(hitGameInterval);
+            io.sockets.in(this.name).emit('gameFinish');
+        }
+    };
+
+    this.popMissile = function () {
+        for (var i = 0; i < this.towerTable.length; i++) {
+            for (var j = 0; j < this.monsterTable.length; j++) {
+                if ((this.monsterTable[j].positionX >= (this.towerTable[i].box.positionX - (this.towerTable[i].ranges * widthBox)))
+                    && (this.monsterTable[j].positionX <= (this.towerTable[i].box.positionX + (this.towerTable[i].ranges * widthBox)))
+                    && (this.monsterTable[j].positionY >= (this.towerTable[i].box.positionY - (this.towerTable[i].ranges * widthBox)))
+                    && (this.monsterTable[j].positionY <= (this.towerTable[i].box.positionY + (this.towerTable[i].ranges * widthBox)))) {
+                    if (!(this.monsterTable[j].futureLife <= 0)) {
+                        this.missilleTable.push(new Missile(this.monsterTable[j], this.towerTable[i].player, this.towerTable[i]));
+                        this.monsterTable[j].updateFutureLife(this.towerTable[i].type);
+                        break;
+                    }
+                }
+            }
+        }
+    };
+
+    this.popMonster = function () {
+        var i, j, z;
+        for (i = 0; i < 3; i++) {
+            for (j = 0; j < 4; j++) {
+                for (z = 1; z < 4; z++) {
+                    this.monsterTable.push(new Monster(this.map.boxes[(canvasNbColumn * i) + (7 * j + 2) + z], this.round));
+                    this.nbMonster++;
+                }
+            }
+        }
+    };
+
+    this.moveMonster = function () {
+        for (var i = 0; i < this.monsterTable.length; i++) {
+            this.monsterTable[i].move(this);
+        }
+    };
+
+    this.moveMissile = function () {
+        for (var i = 0; i < this.missilleTable.length; i++) {
+            this.missilleTable[i].move(this);
+        }
+    };
+
+    /**
+     * Modification tower function
+     */
+
+    this.deleteTower = function (idTower) {
+        for (var i = 0; i < this.towerTable.length; i++) {
+            if (this.towerTable[i].id == idTower) {
+                this.towerTable.splice(i, 1);
+                this.nbTower--;
+                break;
+            }
+        }
+    };
+
+    this.addTower = function (box, player) {
+        var newTower = new Tower(player, box);
+        this.towerTable.push(newTower);
+    };
+
+    /**
+     * Recycle tower function
+     */
+
+    this.recycleTowerByNumberBox = function (nbBox) {
+        var towerTemp = searchTowerByBoxNumber(this, nbBox);
+        towerTemp.recycle();
+        this.deleteTower(towerTemp.id);
+    };
+
+    this.recycleTowerByXYBox = function (x, y) {
+        var towerTemp = searchTowerByBoxXY(this, x, y);
+        towerTemp.recycle();
+        this.deleteTower(towerTemp.id);
+    };
+
+    this.recycleTowerByPositionBox = function (positionX, positionY) {
+        var towerTemp = searchTowerByBoxPosition(this, positionX, positionY);
+        towerTemp.recycle();
+        this.deleteTower(towerTemp.id);
+    };
+
+    /**
+     * Add tower function
+     */
+
+    this.addTowerByNumberBox = function (nbBox, player) {
+        var boxTemp = searchBoxByNumber(this, nbBox);
+        this.addTower(boxTemp, player);
+    };
+
+    this.addTowerByXYBox = function (x, y, player) {
+        var boxTemp = searchBoxByXY(this, x, y);
+        this.addTower(boxTemp, player);
+    };
+
+    this.addTowerByPositionBox = function (positionX, positionY, player) {
+        var boxTemp = searchBoxByPosition(this, positionX, positionY);
+        this.addTower(boxTemp, player);
+    };
+
+
+    /**
+     * Upgrade tower function
+     */
+
+    this.upgradeTowerByNumberBox = function (nbBox, player, type) {
+        var towerTemp = searchTowerByBoxNumber(this, nbBox);
+        if (towerTemp.player.id === player.id) {
+            switch (type) {
+                case TYPE.FIRE.name :
+                    towerTemp.upgradeFire();
+                    break;
+                case TYPE.POISON.name :
+                    towerTemp.upgradeIce();
+                    break;
+                case TYPE.ICE.name :
+                    towerTemp.upgradePoison();
+                    break;
+            }
+        }
+    };
+
+    this.upgradeTowerByXYBox = function (x, y, player, type) {
+        var towerTemp = searchTowerByBoxXY(this, x, y);
+        if (towerTemp.player.id === player.id) {
+            switch (type) {
+                case TYPE.FIRE.name :
+                    towerTemp.upgradeFire();
+                    break;
+                case TYPE.POISON.name :
+                    towerTemp.upgradeIce();
+                    break;
+                case TYPE.ICE.name :
+                    towerTemp.upgradePoison();
+                    break;
+            }
+        }
+    };
+
+    this.upgradeTowerByPositionBox = function (positionX, positionY, player, type) {
+        var towerTemp = searchTowerByBoxPosition(this, positionX, positionY);
+        if (towerTemp.player.id === player.id) {
+            switch (type) {
+                case TYPE.FIRE.name :
+                    towerTemp.upgradeFire();
+                    break;
+                case TYPE.ICE.name :
+                    towerTemp.upgradeIce();
+                    break;
+                case TYPE.POISON.name :
+                    towerTemp.upgradePoison();
+                    break;
+            }
+        }
+    };
+}
+
+/**
+ * Class GameView
+ */
+function GameView(game) {
+    // Fields
+    this.idGame = game.id;
+    this.nameGame = game.name;
+    this.playerNameTable = [];
+    this.lock = false;
+    this.round = game.round;
+    this.life = game.life;
+
+    for (var j = 0; j < game.playerTable.length; j++) {
+        this.playerNameTable.push(game.playerTable[j].pseudo);
+    }
+
+    if (this.playerNameTable.length == 4 || this.round != 0) {
+        this.lock = true;
+    }
+}
+
+
+/*********************************************************************
+ * Application *
+ *********************************************************************/
+
+/**
+ * Get port from environment and store in Express.
+ */
+var port = normalizePort(process.env.PORT || '3000');
+app.set('port', port);
+
+/**
+ * Create HTTP server.
+ */
+var server = http.createServer(app);
+var io = require('socket.io')(server);
+
+/**
+ * Listen on provided port, on all network interfaces.
+ */
+server.listen(port);
+server.on('error', onError);
+server.on('listening', onListening);
+
+/**
+ * Normalize a port into a number, string, or false.
+ */
+function normalizePort(val) {
+    var port = parseInt(val, 10);
+
+    if (isNaN(port)) {
+        // named pipe
+        return val;
+    }
+
+    if (port >= 0) {
+        // port number
+        return port;
+    }
+
+    return false;
+}
+
+/**
+ * Event listener for HTTP server "error" event.
+ */
+function onError(error) {
+    if (error.syscall !== 'listen') {
+        throw error;
+    }
+    var bind = typeof port === 'string'
+        ? 'Pipe ' + port
+        : 'Port ' + port;
+    // handle specific listen errors with friendly messages
+    switch (error.code) {
+        case 'EACCES':
+            console.error(bind + ' requires elevated privileges');
+            process.exit(1);
+            break;
+        case 'EADDRINUSE':
+            console.error(bind + ' is already in use');
+            process.exit(1);
+            break;
+        default:
+            throw error;
+    }
+}
+
+/**
+ * Event listener for HTTP server "listening" event.
+ */
+function onListening() {
+    var addr = server.address();
+    var bind = typeof addr === 'string'
+        ? 'pipe ' + addr
+        : 'port ' + addr.port;
+    debug('Listening on ' + bind);
+}
+
+
+/*********************************************************************
+ * Socket *
+ *********************************************************************/
+
+/**
+ * Socket connection.
+ */
+io.sockets.on('connection', function (socket) {
+
+    /**------------------------
+     * Index function.
+     */
+
+    /**
+     * On client send "getGamesView" , return a table of gameView.
+     */
+    socket.on('getGamesView', function () {
+        var resultGameViewTable = [];
+
+        for (var i = 0; i < gameTable.length; i++) {
+            resultGameViewTable.push(new GameView(gameTable[i]));
+        }
+        socket.emit('gamesView', resultGameViewTable);
+    });
+
+    /**
+     * On client send 'newGame' , create a new game
+     */
+    socket.on('newGame', function (userPseudo) {
+        gameTable.push(new Game(userPseudo));
+        socket.emit('gameCreatedOK');
+    });
+
+    /**
+     * On client send 'join' , The user join a game.
+     */
+    socket.on('join', function (idGame, userPseudo) {
+        var game = searchGameById(idGame);
+
+        // check if the game exist
+        if (game == undefined || game == null) {
+            socket.emit('joinError', "this game doesn't exist");
+        } else if ((game.round != 0) || game.nbPlayer >= 4) {
+            socket.emit('joinError', "this game is lock");
+        } else {
+            game.addPlayer(userPseudo);
+            socket.emit('joinGood');
+        }
+    });
+
+    /**------------------------
+     * Game function.
+     */
+
+    /**
+     * On client connect to the game.
+     */
+    socket.on('getGame', function (userPseudo) {
+        socket.game = searchGameByPseudo(userPseudo);
+        if (socket.game == null || undefined) {
+            socket.emit('errorGame');
+        } else {
+            socket.userPseudo = userPseudo;
+            socket.player = searchPlayerByPseudo(userPseudo, socket.game);
+            socket.room = socket.game.name;
+            socket.join(socket.game.name);
+            socket.emit('game', socket.game);
+            socket.broadcast.to(socket.game.name).emit('reloadMasterGame', socket.game);
+        }
+    });
+
+    /**
+     * When the user send a message
+     */
+    socket.on('sendMessage', function (message) {
+        io.sockets.in(socket.room).emit('updateChat', socket.userPseudo, message);
+    });
+
+    /**
+     * On client connect to the game.
+     */
+    socket.on('disconnect', function () {
+        if (socket.game != null || socket.game != undefined) {
+            socket.game.removePlayer(socket.userPseudo);
+            if (socket.game.round <= 0) {
+                io.sockets.in(socket.room).emit('reloadMasterGame', socket.game);
+            }
+        }
+    });
+
+    /**
+     * when the client add a tower
+     */
+    socket.on('addTower', function (positionX, positionY) {
+        if (socket.game.round <= 0) {
+            socket.emit('addTowerError', "The game it's not started");
+        } else {
+            var tempPositionX = positionX - (positionX % widthBox);
+            var tempPositionY = positionY - (positionY % heightBox);
+            var towerTemp = searchTowerByBoxPosition(socket.game, tempPositionX, tempPositionY);
+
+            if (towerTemp === null) {
+                var boxTemp = searchBoxByPosition(socket.game, tempPositionX, tempPositionY);
+                if (boxTemp.type.name === "TowerZone") {
+                    if (socket.player.gold >= TYPE.NORMAL.cost) {
+                        socket.game.addTowerByPositionBox(tempPositionX, tempPositionY, socket.player);
+                        io.to(socket.room).emit('addTowerOk', socket.game.towerTable, socket.game.playerTable);
+                    } else {
+                        socket.emit('goldError', "You don't have enough gold.");
+                    }
+                } else {
+                    socket.emit('addTowerError', "You can't add tower here");
+                }
+            } else {
+                socket.emit('addTowerError', "You can't add tower here");
+            }
+        }
+    });
+
+    /**
+     * when the client want recycle a tower
+     */
+    socket.on('recycleTower', function (positionX, positionY) {
+        var tempPositionX = positionX - (positionX % widthBox);
+        var tempPositionY = positionY - (positionY % heightBox);
+        var towerTemp = searchTowerByBoxPosition(socket.game, tempPositionX, tempPositionY);
+        if (towerTemp != null) {
+            if (towerTemp.player.pseudo === socket.userPseudo) {
+                socket.game.recycleTowerByPositionBox(tempPositionX, tempPositionY);
+                io.sockets.in(socket.room).emit('recycleTowerOk', socket.game.towerTable, socket.game.playerTable);
+            } else {
+                socket.emit('recycleTowerError', "It's not your tower.");
+            }
+        } else {
+            socket.emit('recycleTowerError', "You can't recycle tower here");
+        }
+    });
+
+    /**
+     * when the client want update a tower
+     */
+    socket.on('updateTower', function (positionX, positionY, typeName) {
+        var tempPositionX = positionX - (positionX % widthBox);
+        var tempPositionY = positionY - (positionY % heightBox);
+        var towerTemp = searchTowerByBoxPosition(socket.game, tempPositionX, tempPositionY);
+        if (towerTemp != null) {
+            if (towerTemp.player.pseudo === socket.userPseudo) {
+                if (towerTemp.type.name === TYPE.NORMAL.name){
+                    if (socket.player.gold >= TYPE.NORMAL.cost) {
+                        socket.game.upgradeTowerByPositionBox(tempPositionX, tempPositionY, socket.player, typeName);
+                        io.sockets.in(socket.room).emit('updateTowerOk', socket.game.towerTable, socket.game.playerTable);
+                    } else {
+                        socket.emit('goldError', "You don't have enough gold.");
+                    }
+                } else {
+                    socket.emit('updateTowerError', "This Tower is already upgrade");
+                }
+            } else {
+                socket.emit('updateTowerError', "It's not your tower.");
+            }
+        } else {
+            socket.emit('updateTowerError', "You can't update tower here");
+        }
+    });
+
+
+    /**
+     * when the client send start, start the game
+     */
+    socket.on('start', function () {
+        updateGameInterval = setInterval(function () {
+            updateGame(socket);
+        }, 20);
+        hitGameInterval = setInterval(function () {
+            hitGame(socket);
+        }, 1000);
+    });
+});
+
+/*********************************************************************
+ * Function *
+ *********************************************************************/
+
+/**
+ * Start The game
+ */
+function updateGame(socket) {
+    socket.game.update();
+    io.sockets.in(socket.room).emit('updateGameOk', socket.game);
+}
+
+/**
+ * Hit all missile of the game
+ */
+function hitGame(socket) {
+    socket.game.popMissile();
+}
+
+/**
+ * return the game by game id
+ */
+function searchGameById(gameId) {
+    for (var i = 0; i < gameTable.length; i++) {
+        if (gameTable[i].id === gameId) {
+            return gameTable[i];
+        }
+    }
+    return null;
+}
+
+/**
+ * return the game by game name
+ */
+function searchGameByName(nameGame) {
+    for (var i = 0; i < gameTable.length; i++) {
+        if (gameTable[i].name === nameGame) {
+            return gameTable[i];
+        }
+    }
+    return null;
+}
+
+/**
+ * Return the game by player name
+ */
+function searchGameByPseudo(userPseudo) {
+    for (var i = 0; i < gameTable.length; i++) {
+        for (var j = 0; j < gameTable[i].playerTable.length; j++) {
+            if (userPseudo == gameTable[i].playerTable[j].pseudo) {
+                return gameTable[i];
+            }
+        }
+    }
+    return null;
+}
+
+/**
+ * Return the player by pseudo
+ */
+function searchPlayerByPseudo(userPseudo, game) {
+    for (var i = 0; i < game.playerTable.length; i++) {
+        if (game.playerTable[i].pseudo === userPseudo) {
+            return game.playerTable[i];
+        }
+    }
+    return null;
+}
+
+/**
+ * return the tower of the game by the numberTower
+ */
+function searchTowerByBoxNumber(game, numberTower) {
+    for (var i = 0; i < game.towerTable.length; i++) {
+        if (game.towerTable[i].box.nbBox === numberTower) {
+            return game.towerTable[i];
+        }
+    }
+    return null;
+}
+
+/**
+ * return the tower of the game with the x, y
+ */
+function searchTowerByBoxXY(game, x, y) {
+    for (var i = 0; i < game.towerTable.length; i++) {
+        if ((game.towerTable[i].box.x === x) && (game.towerTable[i].box.y === y)) {
+            return game.towerTable[i];
+        }
+    }
+    return null;
+}
+
+/**
+ * return the tower of the game with the positionX, positionY
+ */
+function searchTowerByBoxPosition(game, positionX, positionY) {
+    for (var i = 0; i < game.towerTable.length; i++) {
+        if ((game.towerTable[i].box.positionX === positionX) && (game.towerTable[i].box.positionY === positionY)) {
+            return game.towerTable[i];
+        }
+    }
+    return null;
+}
+
+/**
+ * return the box of the game with the numberbox
+ */
+function searchBoxByNumber(game, numberBox) {
+    for (var i = 0; i < game.map.boxes.length; i++) {
+        if (game.map.boxes[i].nbBox === numberBox) {
+            return game.map.boxes[i];
+        }
+    }
+    return null;
+}
+
+/**
+ * return the box of the game with the x, y
+ */
+function searchBoxByXY(game, x, y) {
+    for (var i = 0; i < game.map.boxes.length; i++) {
+        if ((game.map.boxes[i].x === x) && (game.map.boxes[i].y === y)) {
+            return game.map.boxes[i];
+        }
+    }
+    return null;
+}
+
+/**
+ * return the box of the game with the positionX, positionY
+ */
+function searchBoxByPosition(game, positionX, positionY) {
+    for (var i = 0; i < game.map.boxes.length; i++) {
+        if ((game.map.boxes[i].positionX === positionX) && (game.map.boxes[i].positionY === positionY)) {
+            return game.map.boxes[i];
+        }
+    }
+    return null;
+}
+
+/**
+ *  Return the case in the map with her x and y
+ */
+function returnCase(x, y, game) {
+    for (var i = 0; i < game.map.boxes.length; i++) {
+        var caseX = game.map.boxes[i].positionX;
+        var caseY = game.map.boxes[i].positionY;
+        var caseWidth = game.map.boxes[i].width;
+        var caseHeight = game.map.boxes[i].heigth;
+        if ((caseX < x) && (caseX + caseWidth > x) && (caseY < y) && (caseY + caseHeight > y)) {
+            return game.map.boxes[i];
+        }
+    }
+    return 0;
+}
+
+/**
+ *  Return a random between
+ */
+function randomBetween(min, max) {
+    return Math.floor(min + (Math.random() * (max - min)) + 1);
+}

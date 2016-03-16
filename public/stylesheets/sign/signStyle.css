@@ -1,0 +1,144 @@
+.sign {
+  background: url("../../images/background/BackgroundSign.png") 50% no-repeat fixed;
+  font-family: 'Montserrat', sans-serif;
+  color: #fff;
+  font-size: 14px;
+  letter-spacing: 1px;
+  min-height: 710px;
+  background-size: cover;
+  padding-top: 75px;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0; }
+  .sign *, .sign *:before {
+    position: relative; }
+  .sign .log {
+    position: relative;
+    height: 560px;
+    width: 405px;
+    margin: auto;
+    padding: 60px 60px;
+    background-size: cover;
+    box-shadow: 0 30px 60px -5px #000;
+    background: inherit; }
+    .sign .log:before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: inherit;
+      -webkit-filter: blur(10px);
+      -moz-filter: blur(10px);
+      -o-filter: blur(10px);
+      -ms-filter: blur(10px);
+      filter: blur(50px); }
+    .sign .log h2, .sign .log span {
+      margin-left: 20px; }
+    .sign .log h2 {
+      padding-left: 12px;
+      font-size: 22px;
+      text-transform: uppercase;
+      padding-bottom: 5px;
+      letter-spacing: 2px;
+      display: inline-block;
+      font-weight: 100; }
+      .sign .log h2:first-child {
+        padding-left: 0; }
+      .sign .log h2.active {
+        border-bottom: 2px solid #1161ed; }
+      .sign .log h2.nonactive {
+        color: rgba(255, 255, 255, 0.2); }
+    .sign .log form {
+      padding-top: 80px; }
+    .sign .log span {
+      text-transform: uppercase;
+      font-size: 12px;
+      opacity: 0.7;
+      display: inline-block;
+      position: relative;
+      top: -65px;
+      transition: all 0.5s ease-in-out; }
+    .sign .log input {
+      display: inline-block;
+      padding-top: 20px;
+      font-size: 14px; }
+      .sign .log input[type="text"], .sign .log input[type="password"] {
+        font-family: 'Montserrat', sans-serif;
+        color: #fff; }
+      .sign .log input.text {
+        width: 89%;
+        padding: 10px 20px;
+        display: block;
+        height: 15px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid rgba(255, 255, 255, 0);
+        overflow: hidden;
+        margin-top: 15px;
+        transition: all 0.5s ease-in-out; }
+        .sign .log input.text:focus {
+          outline: 0;
+          border: 2px solid rgba(255, 255, 255, 0.5);
+          border-radius: 20px;
+          background: transparent; }
+          .sign .log input.text:focus + span {
+            opacity: 1; }
+    .sign .log .custom-checkbox {
+      margin-left: 20px;
+      -webkit-appearance: none;
+      background-color: rgba(255, 255, 255, 0.1);
+      padding: 8px;
+      border-radius: 2px;
+      display: inline-block;
+      position: relative;
+      top: 6px; }
+      .sign .log .custom-checkbox:checked {
+        background-color: #1161ed; }
+        .sign .log .custom-checkbox:checked:after {
+          content: '\2714';
+          font-size: 10px;
+          position: absolute;
+          top: 1px;
+          left: 4px;
+          color: #fff; }
+      .sign .log .custom-checkbox:focus {
+        outline: none; }
+    .sign .log label {
+      display: inline-block;
+      padding-top: 10px;
+      padding-left: 5px; }
+    .sign .log .button {
+      background-color: #1161ed;
+      color: #FFF;
+      width: 100%;
+      padding: 10px 20px;
+      display: block;
+      height: 39px;
+      border-radius: 20px;
+      margin-top: 30px;
+      transition: all 0.5s ease-in-out;
+      border: none;
+      text-transform: uppercase; }
+      .sign .log .button:hover {
+        background: #4082f5;
+        box-shadow: 0 4px 35px -5px #4082f5;
+        cursor: pointer; }
+      .sign .log .button:focus {
+        outline: none; }
+    .sign .log hr {
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      top: 50px;
+      position: relative; }
+    .sign .log a {
+      text-align: center;
+      display: block;
+      top: 80px;
+      position: relative;
+      text-decoration: none;
+      color: rgba(255, 255, 255, 0.7); }
+
+/*# sourceMappingURL=signStyle.css.map */

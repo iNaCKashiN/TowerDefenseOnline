@@ -1,0 +1,20 @@
+//*****************************************************
+    Created by KashiN (Allena Johann), Dravet jean-Baptiste,
+    for TowerDefenseOnline,
+    on 06/03/2016.
+    *******************************************************
+
+doctype html
+
+html
+    head
+        title= title
+        block head
+            link(rel='stylesheet', href='/stylesheets/style.css')
+            link(rel='stylesheet', href='/stylesheets/ui/alertStyle.css')
+    body
+        block content
+        include ./ui/alert.jade
+        block script
+            script(type="text/javascript" src="/javascripts/jquery/jquery-1.12.1.js")
+            script(type="text/javascript" src="/javascripts/bootstrap/bootstrap.min.js")

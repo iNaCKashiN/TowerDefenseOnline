@@ -1,0 +1,79 @@
+//*****************************************************
+    Created by KashiN (Allena Johann), Dravet jean-Baptiste,
+    for TowerDefenseOnline,
+    on 09/03/2016.
+    *******************************************************
+
+extends ../layout
+
+block append head
+    link(rel='stylesheet', href='http://fonts.googleapis.com/css?family=Droid+Sans:400,700')
+    link(rel='stylesheet', href='/stylesheets/bootstrap/bootstrap.min.css')
+    link(rel='stylesheet', href='/stylesheets/font/font.css')
+    link(rel='stylesheet', href='/stylesheets/ui/chat.css')
+    link(rel='stylesheet', href='/stylesheets/game/gameStyle.css')
+    // Add css for userPanel.jade
+    link(rel='stylesheet', href='/stylesheets/ui/userPanelStyle.css')
+
+block content
+    include ../ui/userPanel
+    .title
+        h1 Tower Defense Online
+    .game-container
+        .game-wrap
+            .game-information
+                .row.game-stats
+                    .col-md-6#game-round
+                    .col-md-6#game-life
+                .game-name#game-name
+                .row.player-stats
+                    .col-md-4#player-gold
+                    .col-md-4#player-nb-tower
+                    .col-md-4#player-nb-kill
+            canvas#game(width="960px" height="540")
+            .game-information
+                .row
+                    .col-md-2#choice-tower
+                        img.tower-icon.active(src='/images/elements/tower.png', alt='profile-sample7')
+                        br
+                        span 100 po
+                    .col-md-2#choice-recycle
+                        img.tower-icon(src='/images/elements/recycle.png', alt='profile-sample7')
+                        br
+                        span 50%
+                    .col-md-2
+                    .col-md-2#choice-fire
+                        img.tower-icon(src='/images/elements/fire.png', alt='profile-sample7')
+                        br
+                        span 100 po
+                    .col-md-2#choice-ice
+                        img.tower-icon(src='/images/elements/ice.png', alt='profile-sample7')
+                        br
+                        span 100 po
+                    .col-md-2#choice-poison
+                        img.tower-icon(src='/images/elements/poison.png', alt='profile-sample7')
+                        br
+                        span 100 po
+                .row.players
+                    .col-md-3#player-0-name
+                    .col-md-3#player-1-name
+                    .col-md-3#player-2-name
+                    .col-md-3#player-3-name
+            .start-game Start Game
+            .leave-game Leave Game
+    #live-chat
+        header.clearfix
+            h4= user.pseudo
+            span.chat-message-counter
+        .chat
+            .chat-history
+            .container-input-chat
+                input#message-send-wait(type='text', placeholder='Type your message…', autofocus='')
+                input(type='hidden')
+
+
+block append script
+    script(type="text/javascript" src="/javascripts/howler/howler.js")
+    script(type="text/javascript" src="/socket.io/socket.io.js")
+    script(type="text/javascript" src="/javascripts/game/game.js")
+

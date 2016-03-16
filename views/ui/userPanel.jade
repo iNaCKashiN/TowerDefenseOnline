@@ -1,0 +1,24 @@
+//*****************************************************
+    Created by KashiN (Allena Johann), Dravet jean-Baptiste,
+    for TowerDefenseOnline,
+    on 09/03/2016.
+    *******************************************************
+script(type='text/javascript').
+    var user =!{JSON.stringify(user)};
+ul#user-panel
+    li#menu
+        span.image
+            span.entypo-user
+        span.user= user.pseudo
+        span.nb-games= user.nb_game
+            |  Game Played
+        ul
+            li#chat
+                span.entypo-mail
+                |  Chat
+            li#mute-sound
+                span.entypo-mute.icon-sound
+                |  UnMute/Mute sound
+            li#logout
+                span.entypo-cancel-circled
+                    a(href="/signout")  Signout

@@ -1,0 +1,112 @@
+//*****************************************************
+    Created by KashiN (Allena Johann), Dravet jean-Baptiste,
+    for TowerDefenseOnline,
+    on 09/03/2016.
+    *******************************************************
+
+.title
+    font-family: seagram
+    text-align: center
+    color: antiquewhite
+    padding-right: 280px
+    margin-top: 0
+    margin-bottom: 80px
+
+    h1
+        font-size: 60px
+        text-shadow: 8px 8px 0 #000
+
+.game-container
+    min-height: 100%
+    max-width: 960px
+    min-width: 960px
+    margin: 0 auto
+    padding: 10px
+    background-color: rgba(0,0,0,0.7)
+    border-radius: 20px
+    border: 2px solid black
+    box-sizing: content-box !important
+
+    .game-wrap
+        position: relative
+        padding: 20px 0 0
+
+    .start-game
+        position: absolute
+        left: 43%
+        top: 450px
+
+        font-family: seagram
+        background-color: #4CAF50
+        border: none
+        color: white
+        padding: 15px 32px
+        text-align: center
+        text-decoration: none
+        display: inline-block
+        font-size: 16px
+        border-radius: 8px
+        cursor: pointer
+        display: none
+
+    .leave-game
+        position: absolute
+        left: 43%
+        top: 450px
+
+        font-family: seagram
+        background-color: #4CAF50
+        border: none
+        color: white
+        padding: 15px 32px
+        text-align: center
+        text-decoration: none
+        display: inline-block
+        font-size: 16px
+        border-radius: 8px
+        cursor: pointer
+        display: none
+
+    canvas
+        position: relative
+        max-width: 100%
+        border: 2px solid black
+        max-height: 100%
+        display: block
+        margin: 0 auto
+        margin-bottom: 20px
+
+    .game-information
+        font-family: seagram
+        color: white
+        text-align: center
+
+        .game-name
+            font-size: 40px
+
+        .game-stats
+            font-size: 40px
+
+        .tower-icon
+            width: 100px
+            filter: grayscale(1)
+            -webkit-filter: grayscale(1)
+            -moz-filter: grayscale(1)
+            -o-filter: grayscale(1)
+            -ms-filter: grayscale(1)
+
+            &.active
+                filter: grayscale(0)
+                -webkit-filter: grayscale(0)
+                -moz-filter: grayscale(0)
+                -o-filter: grayscale(0)
+                -ms-filter: grayscale(0)
+
+        .player-stats
+            font-size: 30px
+
+        .players
+            font-size: 30px
+
+        .row
+            padding-bottom: 30px

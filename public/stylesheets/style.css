@@ -1,0 +1,9 @@
+body {
+  padding: 10px;
+  font-family: 'Open Sans', sans-serif;
+  background: url("../images/background/BackgroundSign.png") 50% no-repeat fixed;
+  background-size: cover; }
+  body .row {
+    margin: 0; }
+
+/*# sourceMappingURL=style.css.map */

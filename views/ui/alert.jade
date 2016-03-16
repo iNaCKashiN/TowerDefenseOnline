@@ -1,0 +1,32 @@
+//*****************************************************
+    Created by KashiN (Allena Johann),
+    for TowerDefenseOnline,
+    on 10/03/2016.
+    *******************************************************
+
+.box-alert
+    #alertDynamic
+    if successMessage
+        .alert.alert-success.alert-dismissible(role='alert')
+            button.close(type='button', data-dismiss='alert', aria-label='Close')
+                span(aria-hidden='true') ×
+            strong Success! -
+            = successMessage
+    if infoMessage
+        .alert.alert-info.alert-dismissible(role='alert')
+            button.close(type='button', data-dismiss='alert', aria-label='Close')
+                span(aria-hidden='true') ×
+            strong Info! -
+            = successMessage
+    if warningMessage
+        .alert.alert-warning.alert-dismissible(role='alert')
+            button.close(type='button', data-dismiss='alert', aria-label='Close')
+                span(aria-hidden='true') ×
+            strong Warning! -
+            = warningMessage
+    if dangerMessage
+        .alert.alert-danger.alert-dismissible(role='alert')
+            button.close(type='button', data-dismiss='alert', aria-label='Close')
+                span(aria-hidden='true') ×
+            strong Danger! -
+            = dangerMessage

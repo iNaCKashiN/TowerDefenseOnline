@@ -1,0 +1,34 @@
+//*****************************************************
+    Created by KashiN (Allena Johann), Dravet jean-Baptiste,
+    for TowerDefenseOnline,
+    on 06/03/2016.
+    *******************************************************
+
+extends ./../layout.jade
+
+block append head
+    link(href='https://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css')
+    link(rel='stylesheet', href='/stylesheets/sign/signStyle.css')
+
+block content
+    .sign
+        .log
+            h2#signin-box.nonactive sign in
+            h2#signup-box.active sign up
+            form(action="/signup" method="post")
+                input#pseudo.text(type='text', name='pseudo', placeholder='pseudo')
+                span pseudo
+                br
+                br
+                input#newpassword.text(type='password', name='password', placeholder='password')
+                span password
+                br
+                br
+                input.text(type='password', name='password confirm', placeholder='password confirm')
+                span password confirm
+                br
+                button#signup.button(type="submit", value="SignUp")
+                    | Sign Up
+
+block append script
+    script(type="text/javascript" src="/javascripts/sign/sign.js")
